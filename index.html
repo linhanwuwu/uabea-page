@@ -143,11 +143,11 @@
 <body>
     <div class="container">
         <h1>游戏对象变换数据生成器</h1>
-        <p>输入欧拉角、坐标和大小，生成游戏对象变换数据</p>
+        <p>输入方向、坐标和大小，生成游戏对象变换数据</p>
         
         <div class="input-group">
             <div class="combined-label">
-                <label for="eulerAngle">欧拉角 (格式: x y z):</label>
+                <label for="eulerAngle">方向 (格式: x y z):</label>
                 <div class="axis-label">X&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Y&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Z</div>
             </div>
             <input type="text" id="eulerAngle" placeholder="例如: 0 90 0">
@@ -166,7 +166,7 @@
                 <label for="scale">大小 (格式: x y z):</label>
                 <div class="axis-label">X&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Y&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Z</div>
             </div>
-            <input type="text" id="scale" placeholder="例如: 0 0 0" value="">
+            <input type="text" id="scale" placeholder="例如: 1 1 1" value="">
         </div>
         
         <button onclick="generateTransformData()">生成变换数据</button>
@@ -260,8 +260,8 @@
                 w: (cx * cy * cz + sx * sy * sz).toFixed(5)
             };
             
-            // 生成输出格式
-            const output = `0 Quaternionf m_LocalRotation\n  0 float x = ${quat.x}\n  0 float y = ${quat.y}\n  0 float z = ${quat.z}\n  0 float w = ${quat.w}\n0 Vector3f m_LocalPosition\n  0 float x = ${position.x.toFixed(5)}\n  0 float y = ${position.y.toFixed(5)}\n  0 float z = ${position.z.toFixed(5)}\n1 Vector3f m_LocalScale\n  0 float x = ${scale.x.toFixed(5)}\n  0 float y = ${scale.y.toFixed(5)}\n  0 float z = ${scale.z.toFixed(5)}`;
+            // 生成输出格式（在指定行前添加空格）
+            const output = ` 0 Quaternionf m_LocalRotation\n  0 float x = ${quat.x}\n  0 float y = ${quat.y}\n  0 float z = ${quat.z}\n  0 float w = ${quat.w}\n 0 Vector3f m_LocalPosition\n  0 float x = ${position.x.toFixed(5)}\n  0 float y = ${position.y.toFixed(5)}\n  0 float z = ${position.z.toFixed(5)}\n 1 Vector3f m_LocalScale\n  0 float x = ${scale.x.toFixed(5)}\n  0 float y = ${scale.y.toFixed(5)}\n  0 float z = ${scale.z.toFixed(5)}`;
             
             // 显示结果
             document.getElementById('result').textContent = output;
