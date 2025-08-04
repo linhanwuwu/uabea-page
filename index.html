@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>游戏对象变换数据生成器</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: url('https://tc.z.wiki/autoupload/f/eO-ytzl0DMyGgqKSFxi4cGSLEelruNP4lGiFb2uVJGyyl5f0KlZfm6UsKj-HyTuv/20250804/AjPO/1366X768/f4a5991d-aae5-4096-91c1-54b9f12e8926.png') no-repeat center center fixed;
+            background-size: cover;
+        }
+        .container {
+            background-color: rgba(255, 255, 255, 0.85);
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .input-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-sizing: border-box;
+            font-family: monospace;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 20px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .action-buttons button {
+            flex: 1;
+            margin-top: 0;
+        }
+        .copy-button {
+            background-color: #2196F3;
+        }
+        .copy-button:hover {
+            background-color: #0b7dda;
+        }
+        .paste-button {
+            background-color: #FF9800;
+        }
+        .paste-button:hover {
+            background-color: #e68a00;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #e9f7ef;
+            border-radius: 5px;
+            display: none;
+            font-family: monospace;
+            white-space: pre;
+            overflow-x: auto;
+        }
+        .result.show {
+            display: block;
+        }
+        .quat-value {
+            font-family: monospace;
+            font-size: 18px;
+            color: #2c3e50;
+        }
+        .explanation {
+            margin-top: 30px;
+            padding: 15px;
+            background-color: #e3f2fd;
+            border-radius: 5px;
+        }
+        .test-case {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #fff3e0;
+            border-radius: 5px;
+        }
+        .test-button {
+            width: auto;
+            display: inline-block;
+            padding: 8px 15px;
+            background-color: #ff9800;
+            font-size: 14px;
+            margin: 5px;
+        }
+        .test-button:hover {
+            background-color: #f57c00;
+        }
+        .example-buttons {
+            margin-top: 10px;
+        }
+        .combined-label {
+            display: flex;
+            justify-content: space-between;
+        }
+        .axis-label {
+            font-weight: normal;
+            color: #666;
+        }
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px;
+            background-color: #4CAF50;
+            color: white;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            display: none;
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>游戏对象变换数据生成器</h1>
+        <p>输入欧拉角、坐标和大小，生成游戏对象变换数据</p>
+        
+        <div class="input-group">
+            <div class="combined-label">
+                <label for="eulerAngle">欧拉角 (格式: x y z):</label>
+                <div class="axis-label">X&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Y&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Z</div>
+            </div>
+            <input type="text" id="eulerAngle" placeholder="例如: 0 90 0">
+        </div>
+        
+        <div class="input-group">
+            <div class="combined-label">
+                <label for="position">坐标 (格式: x y z):</label>
+                <div class="axis-label">X&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Y&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Z</div>
+            </div>
+            <input type="text" id="position" placeholder="例如: 0 0 0">
+        </div>
+        
+        <div class="input-group">
+            <div class="combined-label">
+                <label for="scale">大小 (格式: x y z):</label>
+                <div class="axis-label">X&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Y&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Z</div>
+            </div>
+            <input type="text" id="scale" placeholder="例如: 0 0 0" value="">
+        </div>
+        
+        <button onclick="generateTransformData()">生成变换数据</button>
+        
+        <div class="action-buttons">
+            <button class="copy-button" onclick="copyResult()">复制结果</button>
+            <button class="paste-button" onclick="pasteInput()">粘贴输入</button>
+        </div>
+        
+        <div class="test-case">
+            <h3>常用测试示例:</h3>
+            <div class="example-buttons">
+                <button class="test-button" onclick="fillTestValues('0 90 0', '0 0 0', '1 1 1')">(0, 90, 0)</button>
+                <button class="test-button" onclick="fillTestValues('0 180 0', '0 0 0', '1 1 1')">(0, 180, 0)</button>
+                <button class="test-button" onclick="fillTestValues('0 270 0', '0 0 0', '1 1 1')">(0, 270, 0)</button>
+                <button class="test-button" onclick="fillTestValues('90 0 0', '0 0 0', '1 1 1')">(90, 0, 0)</button>
+                <button class="test-button" onclick="fillTestValues('0 0 0', '0 0 0', '1 1 1')">(0, 0, 0)</button>
+                <button class="test-button" onclick="fillTestValues('180 0 0', '0 0 0', '1 1 1')">(180, 0, 0)</button>
+                <button class="test-button" onclick="fillTestValues('270 90 0', '0 0 0', '1 1 1')">(270, 90, 0)</button>
+                <button class="test-button" onclick="fillTestValues('270 0 0', '0 0 0', '1 1 1')">(270, 0, 0)</button>
+            </div>
+        </div>
+        
+        <div id="result" class="result"></div>
+        
+        <div class="explanation">
+            <h3>说明：</h3>
+            <p>网站由林寒呜呜提供，请不要乱用于不正当行径，只供学习交流使用，网站完全免费。</p>
+            <p>网站可以更新迭代，如果你有更好的灵感帮助和完善这个网站。</p>
+            <p>该工具用于生成游戏对象的变换数据，包括旋转、位置和缩放信息。</p>
+            <p>欧拉角会转换为四元数表示，避免万向节死锁问题。</p>
+            <p>输出格式适用于游戏开发中的对象变换数据。</p>
+            <p>对于测试用例 (0, 90, 0)，预期四元数结果应为 (0, 0.70711, 0, 0.70711)。</p>
+            <p><strong>新功能：</strong>使用"复制结果"按钮可将生成的数据复制到剪贴板，"粘贴输入"按钮可从剪贴板粘贴变换数据。</p>
+        </div>
+    </div>
+    
+    <div id="notification" class="notification"></div>
+
+    <script>
+        function showNotification(message) {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.style.display = 'block';
+            
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, 2000);
+        }
+        
+        function fillTestValues(euler, position, scale) {
+            document.getElementById('eulerAngle').value = euler;
+            document.getElementById('position').value = position;
+            document.getElementById('scale').value = scale;
+            generateTransformData();
+        }
+        
+        function parseVector(input, defaults) {
+            if (!input.trim()) return defaults;
+            const values = input.split(/\s+/).map(val => parseFloat(val) || 0);
+            return {
+                x: values[0] || defaults[0],
+                y: values[1] || defaults[1],
+                z: values[2] || defaults[2]
+            };
+        }
+        
+        function generateTransformData() {
+            // 解析输入
+            const euler = parseVector(document.getElementById('eulerAngle').value, [0, 0, 0]);
+            const position = parseVector(document.getElementById('position').value, [0, 0, 0]);
+            const scale = parseVector(document.getElementById('scale').value, [1, 1, 1]);
+            
+            // 欧拉角转四元数 (XYZ顺序)
+            const xRad = euler.x * Math.PI / 180;
+            const yRad = euler.y * Math.PI / 180;
+            const zRad = euler.z * Math.PI / 180;
+            
+            const cx = Math.cos(xRad / 2);
+            const sx = Math.sin(xRad / 2);
+            const cy = Math.cos(yRad / 2);
+            const sy = Math.sin(yRad / 2);
+            const cz = Math.cos(zRad / 2);
+            const sz = Math.sin(zRad / 2);
+            
+            // XYZ顺序欧拉角转四元数的正确公式
+            const quat = {
+                x: (sx * cy * cz - cx * sy * sz).toFixed(5),
+                y: (cx * sy * cz + sx * cy * sz).toFixed(5),
+                z: (cx * cy * sz - sx * sy * cz).toFixed(5),
+                w: (cx * cy * cz + sx * sy * sz).toFixed(5)
+            };
+            
+            // 生成输出格式
+            const output = `0 Quaternionf m_LocalRotation\n  0 float x = ${quat.x}\n  0 float y = ${quat.y}\n  0 float z = ${quat.z}\n  0 float w = ${quat.w}\n0 Vector3f m_LocalPosition\n  0 float x = ${position.x.toFixed(5)}\n  0 float y = ${position.y.toFixed(5)}\n  0 float z = ${position.z.toFixed(5)}\n1 Vector3f m_LocalScale\n  0 float x = ${scale.x.toFixed(5)}\n  0 float y = ${scale.y.toFixed(5)}\n  0 float z = ${scale.z.toFixed(5)}`;
+            
+            // 显示结果
+            document.getElementById('result').textContent = output;
+            document.getElementById('result').classList.add('show');
+        }
+        
+        function copyResult() {
+            const resultElement = document.getElementById('result');
+            if (!resultElement.classList.contains('show')) {
+                showNotification('请先生成变换数据');
+                return;
+            }
+            
+            const text = resultElement.textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                showNotification('结果已复制到剪贴板');
+            }).catch(err => {
+                showNotification('复制失败: ' + err);
+            });
+        }
+        
+        function pasteInput() {
+            navigator.clipboard.readText().then(text => {
+                parsePastedText(text);
+            }).catch(err => {
+                showNotification('粘贴失败: ' + err);
+            });
+        }
+        
+        function parsePastedText(text) {
+            // 解析粘贴的文本，提取欧拉角、坐标和大小
+            const lines = text.split('\n');
+            
+            // 查找欧拉角（从四元数转换回来）
+            const quatX = parseFloat(lines.find(line => line.includes('float x ='))?.split('=')[1]?.trim()) || 0;
+            const quatY = parseFloat(lines.find(line => line.includes('float y ='))?.split('=')[1]?.trim()) || 0;
+            const quatZ = parseFloat(lines.find(line => line.includes('float z ='))?.split('=')[1]?.trim()) || 0;
+            const quatW = parseFloat(lines.find(line => line.includes('float w ='))?.split('=')[1]?.trim()) || 1;
+            
+            // 四元数转欧拉角 (XYZ顺序)
+            const euler = quaternionToEuler(quatX, quatY, quatZ, quatW);
+            
+            // 查找坐标
+            let posX = 0, posY = 0, posZ = 0;
+            const positionSection = lines.findIndex(line => line.includes('m_LocalPosition'));
+            if (positionSection !== -1) {
+                posX = parseFloat(lines[positionSection + 1]?.split('=')[1]?.trim()) || 0;
+                posY = parseFloat(lines[positionSection + 2]?.split('=')[1]?.trim()) || 0;
+                posZ = parseFloat(lines[positionSection + 3]?.split('=')[1]?.trim()) || 0;
+            }
+            
+            // 查找缩放
+            let scaleX = 1, scaleY = 1, scaleZ = 1;
+            const scaleSection = lines.findIndex(line => line.includes('m_LocalScale'));
+            if (scaleSection !== -1) {
+                scaleX = parseFloat(lines[scaleSection + 1]?.split('=')[1]?.trim()) || 1;
+                scaleY = parseFloat(lines[scaleSection + 2]?.split('=')[1]?.trim()) || 1;
+                scaleZ = parseFloat(lines[scaleSection + 3]?.split('=')[1]?.trim()) || 1;
+            }
+            
+            // 填充输入框
+            document.getElementById('eulerAngle').value = `${euler.x.toFixed(5)} ${euler.y.toFixed(5)} ${euler.z.toFixed(5)}`;
+            document.getElementById('position').value = `${posX.toFixed(5)} ${posY.toFixed(5)} ${posZ.toFixed(5)}`;
+            document.getElementById('scale').value = `${scaleX.toFixed(5)} ${scaleY.toFixed(5)} ${scaleZ.toFixed(5)}`;
+            
+            showNotification('输入已粘贴并解析');
+        }
+        
+        function quaternionToEuler(x, y, z, w) {
+            // XYZ顺序四元数转欧拉角
+            const sinr_cosp = 2 * (w * x + y * z);
+            const cosr_cosp = 1 - 2 * (x * x + y * y);
+            const roll = Math.atan2(sinr_cosp, cosr_cosp);
+            
+            const sinp = 2 * (w * y - z * x);
+            let pitch;
+            if (Math.abs(sinp) >= 1)
+                pitch = Math.sign(sinp) * Math.PI / 2;
+            else
+                pitch = Math.asin(sinp);
+            
+            const siny_cosp = 2 * (w * z + x * y);
+            const cosy_cosp = 1 - 2 * (y * y + z * z);
+            const yaw = Math.atan2(siny_cosp, cosy_cosp);
+            
+            return {
+                x: roll * 180 / Math.PI,
+                y: pitch * 180 / Math.PI,
+                z: yaw * 180 / Math.PI
+            };
+        }
+        
+        // 添加回车键支持
+        document.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                generateTransformData();
+            }
+        });
+    </script>
+</body>
+</html>
